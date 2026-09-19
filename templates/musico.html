@@ -5,6 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedrelias - Meu Painel</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .slider-container {
+            margin: 25px 0;
+            text-align: center;
+        }
+        input[type=range] {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            outline: none;
+            background: #36393e;
+        }
+        .valor-display {
+            font-size: 32px;
+            font-weight: bold;
+            color: #43b581;
+            margin-top: 10px;
+        }
+        /* Caixa de status com cores dinâmicas */
+        .status-caixa {
+            padding: 15px;
+            border-radius: 6px;
+            margin-top: 20px;
+            font-weight: bold;
+            text-align: center;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .status-amarelo {
+            background: rgba(250, 166, 26, 0.15);
+            border-left: 5px solid #faa61a;
+            color: #faa61a;
+        }
+        .status-verde {
+            background: rgba(67, 181, 129, 0.15);
+            border-left: 5px solid #43b581;
+            color: #43b581;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -15,23 +53,71 @@
     <main>
         <section class="card">
             <h2>Seu Instrumento: <span style="color: #43b581;">{{ musico[2] }}</span></h2>
-            <p style="font-size: 18px; margin-bottom: 20px;">Volume Atual na Mesa: <strong>{{ musico[3] }}</strong></p>
+            <p>Ajuste o slider abaixo para alterar o volume em tempo real:</p>
             
-            <form method="POST">
-                <div class="input-grupo">
-                    <label for="volume">Solicitar Novo Volume (-15 a 15):</label>
-                    <input type="number" id="volume" name="volume" min="-15" max="15" placeholder="Ex: 8" required>
-                </div>
+            <div class="slider-container">
+                <!-- Slider variando de 0 a 10 com o valor atual do banco -->
+                <input type="range" id="volumeSlider" min="-15" max="15" value="{{ musico[3] }}" oninput="atualizarValor(this.value)" onchange="enviarMudanca(this.value)">
+                <div class="valor-display" id="textoValor">{{ musico[3] }}</div>
+            </div>
 
-                <button type="submit" class="btn">Enviar Pedido para o Operador</button>
-            </form>
-
-            <div id="status-pedido" style="margin-top: 20px;">
-                <p style="background: #36393e; padding: 12px; border-radius: 6px; border-left: 4px solid #7289da;">
-                    Dica: Ao enviar, o operador receberá sua solicitação em tempo real. Assim que ele aceitar, seu volume atual será atualizado acima.
-                </p>
+            <!-- Caixa de status que muda de cor (Amarelo / Verde) -->
+            <div id="statusBox" class="status-caixa status-verde">
+                Volume atualizado e sincronizado com a mesa.
             </div>
         </section>
     </main>
+
+    <script>
+        const musicoId = {{ musico[0] }};
+        const textoValor = document.getElementById('textoValor');
+        const statusBox = document.getElementById('statusBox');
+
+        // Atualiza o número na tela enquanto arrasta o slider
+        function atualizarValor(val) {
+            textoValor.innerText = val;
+        }
+
+        // Envia a requisição automaticamente assim que solta o slider (sem clicar em botão)
+        function enviarMudanca(val) {
+            statusBox.className = "status-caixa status-amarelo";
+            statusBox.innerText = "Enviando pedido de volume para o operador...";
+
+            fetch(`/api/musico/pedir`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `musico_id=${musicoId}&volume=${val}`
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.sucesso) {
+                    statusBox.className = "status-caixa status-amarelo";
+                    statusBox.innerText = "Pedido enviado! Aguardando o operador aceitar...";
+                }
+            });
+        }
+
+        // Fica checando o status do pedido e o volume atual na mesa a cada 2 segundos
+        function verificarStatus() {
+            fetch(`/api/musico/status/${musicoId}`)
+                .then(res => res.json())
+                .then(data => {
+                    // Atualiza o slider se o operador aceitou e mudou o volume oficial
+                    const slider = document.getElementById('volumeSlider');
+                    if (data.status === 'aceito') {
+                        statusBox.className = "status-caixa status-verde";
+                        statusBox.innerText = `Operador ACEITOU! Volume na mesa: ${data.volume_atual}`;
+                        textoValor.innerText = data.volume_atual;
+                        slider.value = data.volume_atual;
+                    } else if (data.status === 'pendente') {
+                        statusBox.className = "status-caixa status-amarelo";
+                        statusBox.innerText = "Aguardando o operador aceitar o pedido...";
+                    }
+                });
+        }
+
+        // Roda a verificação a cada 2 segundos
+        setInterval(verificarStatus, 2000);
+    </script>
 </body>
 </html>
