@@ -1,0 +1,154 @@
+/* =========================================
+   Configurações Gerais
+========================================= */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #1e2124; /* Fundo escuro */
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+header h1 {
+    color: #2216d7; /* Verde vibrante */
+    margin-bottom: 5px;
+    font-size: 2.5em;
+    letter-spacing: 2px;
+}
+
+header p {
+    color: #b9bbbe;
+    font-size: 1.1em;
+}
+
+/* =========================================
+   Caixas e Formulários (Tela do Músico)
+========================================= */
+.card {
+    background: #282b30;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+h2, h3 {
+    color: #ffffff;
+    margin-top: 0;
+    border-bottom: 1px solid #424549;
+    padding-bottom: 10px;
+}
+
+.input-grupo {
+    margin-bottom: 20px;
+}
+
+.input-grupo label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #b9bbbe;
+}
+
+.input-grupo input {
+    width: 100%;
+    padding: 12px;
+    box-sizing: border-box;
+    border: 1px solid #424549;
+    border-radius: 6px;
+    background: #36393e;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+.input-grupo input:focus {
+    outline: none;
+    border-color: #2119bf;
+}
+
+.btn {
+    background-color: #7289da; /* Azul botão enviar */
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    width: 100%;
+    font-weight: bold;
+    font-size: 16px;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background-color: #5b6eae;
+}
+
+a {
+    color: #7289da;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+#status-pedido p {
+    background: #36393e;
+    padding: 12px;
+    border-radius: 6px;
+    border-left: 4px solid #7289da;
+}
+
+/* =========================================
+   Cartões de Pedidos (Tela do Operador)
+========================================= */
+.pedido-card {
+    background: #36393e;
+    border-left: 6px solid #faa61a; /* Detalhe laranja de alerta */
+    padding: 15px 20px;
+    margin-bottom: 15px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+.pedido-card p {
+    margin: 8px 0;
+    font-size: 16px;
+}
+
+.btn-aceitar, .btn-recusar {
+    padding: 10px 18px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    margin-top: 10px;
+    transition: 0.2s;
+}
+
+.btn-aceitar {
+    background-color: #43b581;
+    color: white;
+    margin-right: 10px;
+}
+
+.btn-aceitar:hover {
+    background-color: #3ca374;
+}
+
+.btn-recusar {
+    background-color: #f04747;
+    color: white;
+}
+
+.btn-recusar:hover {
+    background-color: #d84040;
+}

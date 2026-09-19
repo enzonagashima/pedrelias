@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedrelias - Pedido do Músico</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>PEDRO E ELIAS</h1>
+        <p>Painel do Músico - Pedido de Volume</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Faça sua mudança de volume abaixo:</h2>
+            
+            <form id="form-pedido">
+                <div class="input-grupo">
+                    <label for="instrumento">Instrumento ou Microfone:</label>
+                    <input type="text" id="instrumento" name="instrumento" placeholder="Ex: Guitarra do Pedro" required>
+                </div>
+
+                <div class="input-grupo">
+                    <label for="volume">Novo Volume Desejado (-15 a 15):</label>
+                    <!-- Adicionado min="0" e max="10" para limitar os valores -->
+                    <input type="number" id="volume" name="volume" placeholder="Ex: 8" min="-15" max="15" required>
+                </div>
+
+                <button type="submit" class="btn">Enviar Pedido para o Operador</button>
+            </form>
+
+            <div id="status-pedido" style="margin-top: 20px;">
+                <h3>Status do Pedido:</h3>
+                <p id="mensagem-status">Nenhum pedido enviado ainda.</p>
+            </div>
+        </section>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/operador">Ir para a Tela do Operador</a>
+        </div>
+    </main>
+
+    <script>
+        const form = document.getElementById('form-pedido');
+        const mensagemStatus = document.getElementById('mensagem-status');
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const instrumento = document.getElementById('instrumento').value;
+            const volume = document.getElementById('volume').value;
+
+            fetch('/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: `instrumento=${encodeURIComponent(instrumento)}&volume=${encodeURIComponent(volume)}`
+            }).then(() => {
+                mensagemStatus.innerHTML = `O pedido para o instrumento <strong>${instrumento}</strong> ir para o volume <strong>${volume}</strong> foi enviado! Aguardando o operador aceitar...`;
+                mensagemStatus.style.color = "#43b581"; // Cor verde moderna
+                form.reset();
+            });
+        });
+    </script>
+</body>
+</html>

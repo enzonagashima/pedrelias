@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedrelias - Painel do Operador</title>
+    <!-- Link correto para o CSS na pasta static -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <header>
+        <h1>PEDRO E ELIAS</h1>
+        <p>Painel do Operador - Mesa de Som</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Pedidos de Volume Pendentes</h2>
+            
+            <!-- Lista onde os pedidos reais vão aparecer dinamicamente -->
+            <div id="lista-pedidos">
+                <p>Carregando pedidos...</p>
+            </div>
+        </section>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/">Voltar para a Tela do Músico</a>
+        </div>
+    </main>
+
+    <!-- Script para buscar e atualizar os pedidos reais do Python -->
+    <script>
+        function carregarPedidos() {
+            fetch('/api/pedidos')
+                .then(response => response.json())
+                .then(pedidos => {
+                    const lista = document.getElementById('lista-pedidos');
+                    lista.innerHTML = '';
+
+                    if (pedidos.length === 0) {
+                        lista.innerHTML = '<p>Nenhum pedido pendente no momento.</p>';
+                        return;
+                    }
+
+                    pedidos.forEach(p => {
+                        const card = document.createElement('div');
+                        card.className = 'pedido-card'; // Usa o estilo do CSS
+                        card.innerHTML = `
+                            <p><strong>Instrumento:</strong> ${p.instrumento}</p>
+                            <p><strong>Novo Volume Desejado:</strong> ${p.volume}</p>
+                            <button class="btn-aceitar" onclick="responderPedido(${p.id}, 'aceitar')">Aceitar</button>
+                            <button class="btn-recusar" onclick="responderPedido(${p.id}, 'recusar')">Recusar</button>
+                        `;
+                        lista.appendChild(card);
+                    });
+                });
+        }
+
+        function responderPedido(id, acao) {
+            fetch(`/api/pedido/${id}/${acao}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.sucesso) {
+                        carregarPedidos(); // Atualiza a lista na tela imediatamente
+                    }
+                });
+        }
+
+        // Carrega os pedidos assim que a página abre e verifica novos pedidos a cada 3 segundos
+        carregarPedidos();
+        setInterval(carregarPedidos, 3000);
+    </script>
+</body>
+</html>
