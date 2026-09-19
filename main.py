@@ -6,60 +6,133 @@ app = Flask(__name__)
 def init_db():
     conn = sqlite3.connect('mesa.db')
     cursor = conn.cursor()
+    
+    # Tabela de Músicos
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS musicos (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            nome TEXT NOT NULL,
+            instrumento TEXT NOT NULL,
+            volume_atual TEXT DEFAULT '0'
+        )
+    ''')
+    
+    # Tabela de Pedidos de Mudança
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS pedidos (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            musico_id INTEGER,
             instrumento TEXT NOT NULL,
             volume TEXT NOT NULL,
-            status TEXT DEFAULT 'pendente'
+            status TEXT DEFAULT 'pendente',
+            FOREIGN KEY (musico_id) REFERENCES musicos (id)
         )
     ''')
+    
     conn.commit()
     conn.close()
 
-@app.route('/', methods=['GET', 'POST'])
-def index():
+# Rota de Cadastro de Músicos
+@app.route('/cadastro', methods=['GET', 'POST'])
+def cadastro():
+    conn = sqlite3.connect('mesa.db')
+    cursor = conn.cursor()
+    
     if request.method == 'POST':
+        nome = request.form['nome']
         instrumento = request.form['instrumento']
-        volume = request.form['volume']
-        
-        conn = sqlite3.connect('mesa.db')
-        cursor = conn.cursor()
-        cursor.execute('INSERT INTO pedidos (instrumento, volume, status) VALUES (?, ?, ?)', 
-                       (instrumento, volume, 'pendente'))
+        cursor.execute('INSERT INTO musicos (nome, instrumento, volume_atual) VALUES (?, ?, ?)', 
+                       (nome, instrumento, '0'))
         conn.commit()
         conn.close()
+        return redirect(url_for('cadastro'))
         
-        return redirect(url_for('index'))
-        
-    return render_template('index.html')
+    cursor.execute('SELECT id, nome, instrumento, volume_atual FROM musicos')
+    musicos = cursor.fetchall()
+    conn.close()
+    
+    return render_template('cadastro.html', musicos=musicos)
 
+# Rota da Tela do Músico (Individual por ID)
+@app.route('/musico/<int:id>', methods=['GET', 'POST'])
+def musico(id):
+    conn = sqlite3.connect('mesa.db')
+    cursor = conn.cursor()
+    
+    if request.method == 'POST':
+        volume = request.form['volume']
+        cursor.execute('SELECT instrumento FROM musicos WHERE id = ?', (id,))
+        res = cursor.fetchone()
+        instrumento = res[0] if res else "Desconhecido"
+        
+        # Salva o pedido
+        cursor.execute('INSERT INTO pedidos (musico_id, instrumento, volume, status) VALUES (?, ?, ?, ?)', 
+                       (id, instrumento, volume, 'pendente'))
+        conn.commit()
+        conn.close()
+        return redirect(url_for('musico', id=id))
+        
+    cursor.execute('SELECT id, nome, instrumento, volume_atual FROM musicos WHERE id = ?', (id,))
+    musico_info = cursor.fetchone()
+    conn.close()
+    
+    if not musico_info:
+        return "Músico não encontrado!", 404
+        
+    return render_template('musico.html', musico=musico_info)
+
+# Rota da Tela do Operador (Vê todos os instrumentos e volumes)
 @app.route('/operador')
 def operador():
     return render_template('operador.html')
 
+# API para buscar pedidos pendentes
 @app.route('/api/pedidos')
 def listar_pedidos():
     conn = sqlite3.connect('mesa.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, instrumento, volume FROM pedidos WHERE status = 'pendente'")
+    cursor.execute("SELECT id, musico_id, instrumento, volume FROM pedidos WHERE status = 'pendente'")
     pedidos = cursor.fetchall()
     conn.close()
     
-    lista = [{'id': p[0], 'instrumento': p[1], 'volume': p[2]} for p in pedidos]
+    lista = [{'id': p[0], 'musico_id': p[1], 'instrumento': p[2], 'volume': p[3]} for p in pedidos]
     return jsonify(lista)
 
+# API para Operador Aceitar ou Recusar (Atualiza o volume oficial do músico se aceito)
 @app.route('/api/pedido/<int:id>/<acao>', methods=['POST'])
 def atualizar_pedido(id, acao):
-    novo_status = 'aceito' if acao == 'aceitar' else 'recusado'
-    
     conn = sqlite3.connect('mesa.db')
     cursor = conn.cursor()
+    
+    if acao == 'aceitar':
+        # Pega os dados do pedido para atualizar o volume atual do músico
+        cursor.execute("SELECT musico_id, volume FROM pedidos WHERE id = ?", (id,))
+        pedido = cursor.fetchone()
+        if pedido:
+            musico_id, novo_volume = pedido
+            cursor.execute("UPDATE musicos SET volume_atual = ? WHERE id = ?", (novo_volume, musico_id))
+        
+        novo_status = 'aceito'
+    else:
+        novo_status = 'recusado'
+    
     cursor.execute("UPDATE pedidos SET status = ? WHERE id = ?", (novo_status, id))
     conn.commit()
     conn.close()
     
     return jsonify({'sucesso': True, 'status': novo_status})
+
+# API para o operador ver a lista completa de todos os instrumentos e seus volumes atuais
+@app.route('/api/instrumentos')
+def listar_instrumentos():
+    conn = sqlite3.connect('mesa.db')
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, nome, instrumento, volume_atual FROM musicos")
+    dados = cursor.fetchall()
+    conn.close()
+    
+    lista = [{'id': d[0], 'nome': d[1], 'instrumento': d[2], 'volume_atual': d[3]} for d in dados]
+    return jsonify(lista)
 
 if __name__ == '__main__':
     init_db()

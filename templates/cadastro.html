@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedrelias - Cadastro de Músicos</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>PEDRO E ELIAS</h1>
+        <p>Painel Administrativo - Cadastro</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Cadastrar Novo Músico</h2>
+            <form action="/cadastro" method="POST">
+                <div class="input-grupo">
+                    <label for="nome">Nome do Músico:</label>
+                    <input type="text" id="nome" name="nome" placeholder="Ex: João Silva" required>
+                </div>
+                <div class="input-grupo">
+                    <label for="instrumento">Instrumento / Microfone:</label>
+                    <input type="text" id="instrumento" name="instrumento" placeholder="Ex: Guitarra Base" required>
+                </div>
+                <button type="submit" class="btn">Cadastrar Músico</button>
+            </form>
+        </section>
+
+        <section class="card" style="margin-top: 20px;">
+            <h2>Músicos Cadastrados</h2>
+            <div id="lista-musicos">
+                {% for m in musicos %}
+                    <div class="pedido-card" style="border-left-color: #7289da;">
+                        <p><strong>Nome:</strong> {{ m[1] }}</p>
+                        <p><strong>Instrumento:</strong> {{ m[2] }}</p>
+                        <p><strong>Volume Atual na Mesa:</strong> {{ m[3] }}</p>
+                        <a href="/musico/{{ m[0] }}" target="_blank" class="btn" style="display:inline-block; text-align:center; padding:8px; margin-top:5px; font-size:14px;">Acessar Painel Deste Músico</a>
+                    </div>
+                {% else %}
+                    <p>Nenhum músico cadastrado ainda.</p>
+                {% endfor %}
+            </div>
+        </section>
+
+        <div style="margin-top: 20px; text-align: center;">
+            <a href="/operador">Ir para a Tela do Operador</a>
+        </div>
+    </main>
+</body>
+</html>

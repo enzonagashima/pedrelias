@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedrelias - Meu Painel</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <header>
+        <h1>PEDRO E ELIAS</h1>
+        <p>Painel do Músico: {{ musico[1] }}</p>
+    </header>
+
+    <main>
+        <section class="card">
+            <h2>Seu Instrumento: <span style="color: #43b581;">{{ musico[2] }}</span></h2>
+            <p style="font-size: 18px; margin-bottom: 20px;">Volume Atual na Mesa: <strong>{{ musico[3] }}</strong></p>
+            
+            <form method="POST">
+                <div class="input-grupo">
+                    <label for="volume">Solicitar Novo Volume (-15 a 15):</label>
+                    <input type="number" id="volume" name="volume" min="-15" max="15" placeholder="Ex: 8" required>
+                </div>
+
+                <button type="submit" class="btn">Enviar Pedido para o Operador</button>
+            </form>
+
+            <div id="status-pedido" style="margin-top: 20px;">
+                <p style="background: #36393e; padding: 12px; border-radius: 6px; border-left: 4px solid #7289da;">
+                    Dica: Ao enviar, o operador receberá sua solicitação em tempo real. Assim que ele aceitar, seu volume atual será atualizado acima.
+                </p>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

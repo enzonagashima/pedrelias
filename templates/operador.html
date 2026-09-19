@@ -4,39 +4,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pedrelias - Painel do Operador</title>
-    <!-- Link correto para o CSS na pasta static -->
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 
     <header>
         <h1>PEDRO E ELIAS</h1>
-        <p>Painel do Operador - Mesa de Som</p>
+        <p>Painel do Operador - Mesa de Som Geral</p>
     </header>
 
     <main>
-        <section class="card">
+        <!-- Seção de Pedidos Pendentes -->
+        <section class="card" style="margin-bottom: 30px;">
             <h2>Pedidos de Volume Pendentes</h2>
-            
-            <!-- Lista onde os pedidos reais vão aparecer dinamicamente -->
             <div id="lista-pedidos">
                 <p>Carregando pedidos...</p>
             </div>
         </section>
 
+        <!-- Seção de Monitoramento de Todos os Instrumentos -->
+        <section class="card">
+            <h2>Status Geral da Mesa (Todos os Instrumentos)</h2>
+            <div id="lista-instrumentos">
+                <p>Carregando instrumentos...</p>
+            </div>
+        </section>
+
         <div style="margin-top: 20px; text-align: center;">
-            <a href="/">Voltar para a Tela do Músico</a>
+            <a href="/cadastro">Ir para Cadastro de Músicos</a>
         </div>
     </main>
 
-    <!-- Script para buscar e atualizar os pedidos reais do Python -->
     <script>
+        // Carrega os pedidos pendentes
         function carregarPedidos() {
             fetch('/api/pedidos')
                 .then(response => response.json())
                 .then(pedidos => {
                     const lista = document.getElementById('lista-pedidos');
-                    lista.innerHTML = '';
+                    lista.innerHTML = ''; 
 
                     if (pedidos.length === 0) {
                         lista.innerHTML = '<p>Nenhum pedido pendente no momento.</p>';
@@ -45,7 +51,7 @@
 
                     pedidos.forEach(p => {
                         const card = document.createElement('div');
-                        card.className = 'pedido-card'; // Usa o estilo do CSS
+                        card.className = 'pedido-card';
                         card.innerHTML = `
                             <p><strong>Instrumento:</strong> ${p.instrumento}</p>
                             <p><strong>Novo Volume Desejado:</strong> ${p.volume}</p>
@@ -57,19 +63,52 @@
                 });
         }
 
+        // Carrega o status de todos os instrumentos da banda simultaneamente
+        function carregarInstrumentos() {
+            fetch('/api/instrumentos')
+                .then(response => response.json())
+                .then(instrumentos => {
+                    const bloco = document.getElementById('lista-instrumentos');
+                    bloco.innerHTML = '';
+
+                    if (instrumentos.length === 0) {
+                        bloco.innerHTML = '<p>Nenhum músico cadastrado.</p>';
+                        return;
+                    }
+
+                    instrumentos.forEach(i => {
+                        const item = document.createElement('div');
+                        item.className = 'pedido-card';
+                        item.style.borderLeftColor = '#43b581';
+                        item.innerHTML = `
+                            <p><strong>Músico:</strong> ${i.nome}</p>
+                            <p><strong>Instrumento:</strong> ${i.instrumento}</p>
+                            <p><strong>Volume Atual na Mesa:</strong> <span style="color: #43b581; font-size: 20px;">${i.volume_atual}</span></p>
+                        `;
+                        bloco.appendChild(item);
+                    });
+                });
+        }
+
         function responderPedido(id, acao) {
             fetch(`/api/pedido/${id}/${acao}`, { method: 'POST' })
                 .then(response => response.json())
                 .then(data => {
                     if (data.sucesso) {
-                        carregarPedidos(); // Atualiza a lista na tela imediatamente
+                        carregarPedidos();
+                        carregarInstrumentos();
                     }
                 });
         }
 
-        // Carrega os pedidos assim que a página abre e verifica novos pedidos a cada 3 segundos
-        carregarPedidos();
-        setInterval(carregarPedidos, 3000);
+        // Atualiza as duas tabelas automaticamente a cada 3 segundos
+        function atualizarTudo() {
+            carregarPedidos();
+            carregarInstrumentos();
+        }
+
+        atualizarTudo();
+        setInterval(atualizarTudo, 3000);
     </script>
 </body>
 </html>
